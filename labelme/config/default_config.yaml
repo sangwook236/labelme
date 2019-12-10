@@ -78,3 +78,6 @@ shortcuts:
   edit_line_color: Ctrl+L
   edit_fill_color: Ctrl+Shift+L
   toggle_keep_prev_mode: Ctrl+P
+  detect_object: Ctrl+Shift+O
+  detect_text: Ctrl+Shift+T
+  merge_polygons_to_rect: Ctrl+Shift+M
