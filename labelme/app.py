@@ -29,11 +29,12 @@ from labelme.widgets import LabelDialog
 from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
-from labelme.text_detection import detect_objects_by_east, detect_objects_by_textboxes
 #from labelme.object_detection_tf import detect_objects_by_faster_rcnn, detect_objects_by_mask_rcnn
-#from labelme.text_detection_keras import detect_text_by_craft
 from labelme.object_detection_py import detect_objects_by_faster_rcnn, detect_objects_by_mask_rcnn
+from labelme.text_detection import detect_objects_by_east, detect_objects_by_textboxes
+#from labelme.text_detection_keras import detect_text_by_craft
 from labelme.text_detection_py import detect_text_by_craft
+from labelme.text_recognition_py import recognize_text_by_transformer
 
 
 # FIXME
@@ -336,6 +337,8 @@ class MainWindow(QtWidgets.QMainWindow):
                               'Detect objects', enabled=True)
         detectText = action('Detect Texts', self.detectText, shortcuts['detect_text'], 'objects',
                             'Detect texts', enabled=True)
+        recognizeText = action('Recognize Texts', self.recognizeText, shortcuts['recognize_text'], 'objects',
+                            'Recognize texts', enabled=False)
 
         mergePolygonToRect = action('Merge Polygons', self.mergePolygonToRect, shortcuts['merge_polygons_to_rect'], 'objects',
                                     'Merge polygons to a rectangle', enabled=False)
@@ -434,7 +437,7 @@ class MainWindow(QtWidgets.QMainWindow):
             toggleKeepPrevMode=toggle_keep_prev_mode,
             delete=delete, edit=edit, copy=copy,
             undoLastPoint=undoLastPoint, undo=undo,
-            detectObject=detectObject, detectText=detectText,
+            detectObject=detectObject, detectText=detectText, recognizeText=recognizeText,
             mergePolygonToRect=mergePolygonToRect,
             addPointToEdge=addPointToEdge,
             createMode=createMode, editMode=editMode,
@@ -468,6 +471,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 detectObject,
                 detectText,
+                recognizeText,
                 mergePolygonToRect,
             ),
             # menu shown at right click
@@ -489,6 +493,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 addPointToEdge,
                 detectObject,
                 detectText,
+                recognizeText,
                 mergePolygonToRect,
             ),
             onLoadActive=(
@@ -589,6 +594,7 @@ class MainWindow(QtWidgets.QMainWindow):
             None,
             detectObject,
             detectText,
+            recognizeText,
             mergePolygonToRect,
             None,
             zoomIn,
@@ -794,6 +800,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 shape.addPoint(QtCore.QPointF(x, y))
             shape.close()
 
+            """
             default_flags = {}
             if self._config['label_flags']:
                 for pattern, keys in self._config['label_flags'].items():
@@ -802,6 +809,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             default_flags[key] = False
             shape.flags = default_flags
             #shape.flags.update(flags)
+            """
 
             shapes.append(shape)
         self.setDirty()
@@ -819,6 +827,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 shape.addPoint(QtCore.QPointF(x, y))
             shape.close()
 
+            """
             default_flags = dict()
             if self._config['label_flags']:
                 for pattern, keys in self._config['label_flags'].items():
@@ -827,10 +836,32 @@ class MainWindow(QtWidgets.QMainWindow):
                             default_flags[key] = False
             shape.flags = default_flags
             #shape.flags.update(flags)
+            """
 
             shapes.append(shape)
         self.setDirty()
         self.loadShapes(shapes)
+
+    def recognizeText(self):
+        if not self.canvas.selectedShapes:
+            msg = 'No selected shape'
+            QtWidgets.QMessageBox.warning(self, 'Attention', msg, QtWidgets.QMessageBox.Ok)
+            return
+
+        rects = list()
+        for shape in self.canvas.selectedShapes:
+            points = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
+            rects.append(np.concatenate([np.min(points, axis=0), np.max(points, axis=0)]))  # [left, top, right, bottom].
+        rects = np.array(rects)
+ 
+        recognized_texts = recognize_text_by_transformer(self.imagePath, rects)
+
+        for shape, txt in zip(self.canvas.selectedShapes, recognized_texts):
+            shape.label = txt
+            item = self.labelList.get_item_from_shape(shape)
+            item.setText(txt)
+
+        self.setDirty()
 
     def mergePolygonToRect(self):
         msg = 'You are about to permanently merge {} polygons, ' \
@@ -856,6 +887,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.addPoint(QtCore.QPointF(rb[0], rb[1]))
         shape.close()
 
+        """
         default_flags = dict()
         if self._config['label_flags']:
             for pattern, keys in self._config['label_flags'].items():
@@ -864,6 +896,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         default_flags[key] = False
         shape.flags = default_flags
         #shape.flags.update(flags)
+        """
 
         self.setDirty()
         self.canvas.shapes.append(shape)
@@ -1049,6 +1082,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.shapeLineColor.setEnabled(n_selected)
         self.actions.shapeFillColor.setEnabled(n_selected)
         self.actions.mergePolygonToRect.setEnabled(n_selected)
+        self.actions.recognizeText.setEnabled(n_selected)
 
     def addLabel(self, shape):
         item = QtWidgets.QListWidgetItem(shape.label)
