@@ -29,8 +29,11 @@ from labelme.widgets import LabelDialog
 from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
-#from labelme.object_detection import detect_objects_by_faster_rcnn, detect_objects_by_mask_rcnn
-#from labelme.text_detection import detect_text_by_craft, detect_objects_by_east, detect_objects_by_textboxes
+from labelme.text_detection import detect_objects_by_east, detect_objects_by_textboxes
+#from labelme.object_detection_tf import detect_objects_by_faster_rcnn, detect_objects_by_mask_rcnn
+#from labelme.text_detection_keras import detect_text_by_craft
+from labelme.object_detection_py import detect_objects_by_faster_rcnn, detect_objects_by_mask_rcnn
+from labelme.text_detection_py import detect_text_by_craft
 
 
 # FIXME
