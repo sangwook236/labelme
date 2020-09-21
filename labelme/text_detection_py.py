@@ -1,4 +1,5 @@
 import os, urllib.request, time
+import torch
 import craft.imgproc as imgproc
 #import craft.file_utils as file_utils
 import craft.test_utils as test_utils
@@ -19,7 +20,7 @@ def detect_text_by_craft(image_filepath):
 		os.makedirs(cache_dir_path, exist_ok=True)
 		urllib.request.urlretrieve(url, craft_refiner_model_filepath)
 	craft_refine = False  # Enable link refiner.
-	craft_cuda = True  # Use cuda for inference.
+	craft_cuda = torch.cuda.is_available()  # Use cuda for inference.
 
 	print('Start loading CRAFT...')
 	start_time = time.time()

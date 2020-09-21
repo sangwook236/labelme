@@ -859,14 +859,14 @@ class MainWindow(QtWidgets.QMainWindow):
         rects = np.array(rects)
  
         recognized_texts = recognize_text_by_transformer(self.imagePath, rects)
+        if recognized_texts:
+            if len(shapes) == len(recognized_texts):
+                for shape, txt in zip(shapes, recognized_texts):
+                    shape.label = txt
+                    item = self.labelList.get_item_from_shape(shape)
+                    item.setText(txt)
 
-        if len(shapes) == len(recognized_texts):
-            for shape, txt in zip(shapes, recognized_texts):
-                shape.label = txt
-                item = self.labelList.get_item_from_shape(shape)
-                item.setText(txt)
-
-	        self.setDirty()
+                self.setDirty()
 
     def mergePolygonToRect(self):
         msg = 'You are about to permanently merge {} polygons, ' \
@@ -1136,7 +1136,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         for key in keys:
                             default_flags[key] = False
             shape.flags = default_flags
-            shape.flags.update(flags)
+            if flags: shape.flags.update(flags)
 
             s.append(shape)
         self.loadShapes(s)
