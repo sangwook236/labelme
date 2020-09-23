@@ -55,11 +55,12 @@ def recognize_text_by_transformer(image_filepath, rects):
 	model, infer_functor = dia_facade.build_text_model_for_inference(model_filepath_to_load, model_type, image_shape, max_label_len, label_converter, SOS_ID, EOS_ID, num_suffixes, lang, logger=logger, device=device)
 
 	if model and infer_functor and label_converter:
+		#batch_size = 1  # Infer one-by-one.
+
 		# Infer by the model.
 		print('Start inferring...')
 		start_time = time.time()
 		model.eval()
-		#batch_size = 1  # Infer one-by-one.
 		predictions = dia_facade.recognize_text(model, infer_functor, inputs, batch_size, logger=logger, device=device)
 		print('End inferring: {} secs.'.format(time.time() - start_time))
 		print('Inference: shape = {}, dtype = {}, (min, max) = ({}, {}).'.format(predictions.shape, predictions.dtype, np.min(predictions), np.max(predictions)))
