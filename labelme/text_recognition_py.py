@@ -6,29 +6,22 @@ import labelme.dia_engine.dia_facade as dia_facade
 import labelme.dia_engine.text_generation_util as tg_util
 
 def recognize_text_by_transformer(image_filepath, rects):
-	model_type = 'transformer'
-	lang = 'kor'
 	image_shape = 64, 1280, 3
 	max_label_len = 50
 	batch_size = 64
 	gpu = 0
 
-	model_filepath_to_load = './labelme/dia_engine/trained_model/dia.pth'
+	model_filepath_to_load = './labelme/dia_model/dia_20201002.pth'
 	is_pil = True
 	logger = None
 
 	#if gpu >= 0:
 	#	os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
-	device = torch.device('cuda:{}'.format(gpu) if torch.cuda.is_available() and gpu >= 0 else 'cpu')
+	device = torch.device(('cuda:{}'.format(gpu) if gpu >= 0 else 'cuda') if torch.cuda.is_available() else 'cpu')
 	print('Device: {}.'.format(device))
 
 	#--------------------
-	if lang == 'kor':
-		charset = tg_util.construct_charset()
-	elif lang == 'eng':
-		charset = tg_util.construct_charset(hangeul=False)
-	else:
-		raise ValueError('Invalid language, {}'.format(lang))
+	charset = tg_util.construct_charset()
 
 	# Create a label converter.
 	label_converter_type = 'sos+eos'
@@ -52,16 +45,16 @@ def recognize_text_by_transformer(image_filepath, rects):
 
 	#--------------------
 	# Build a model.
-	model, infer_functor = dia_facade.build_text_model_for_inference(model_filepath_to_load, model_type, image_shape, max_label_len, label_converter, SOS_ID, EOS_ID, num_suffixes, lang, logger=logger, device=device)
+	model = dia_facade.build_text_model_for_inference(model_filepath_to_load, image_shape, max_label_len, label_converter, SOS_ID, EOS_ID, num_suffixes, logger=logger, device=device)
 
-	if model and infer_functor and label_converter:
+	if model and label_converter:
 		#batch_size = 1  # Infer one-by-one.
 
 		# Infer by the model.
 		print('Start inferring...')
 		start_time = time.time()
 		model.eval()
-		predictions = dia_facade.recognize_text(model, infer_functor, inputs, batch_size, logger=logger, device=device)
+		predictions = dia_facade.recognize_text(model, inputs, batch_size, logger=logger, device=device)
 		print('End inferring: {} secs.'.format(time.time() - start_time))
 		print('Inference: shape = {}, dtype = {}, (min, max) = ({}, {}).'.format(predictions.shape, predictions.dtype, np.min(predictions), np.max(predictions)))
 
