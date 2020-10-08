@@ -21,7 +21,7 @@ def recognize_text_by_transformer(image_filepath, rects):
 	print('Device: {}.'.format(device))
 
 	#--------------------
-	charset = tg_util.construct_charset()
+	charset = tg_util.construct_charset(hangeul=True)
 
 	# Create a label converter.
 	label_converter_type = 'sos+eos'
