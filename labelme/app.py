@@ -36,6 +36,8 @@ from labelme.text_detection import detect_objects_by_east, detect_objects_by_tex
 from labelme.text_detection_py import detect_text_by_craft
 from labelme.text_recognition_py import recognize_text_by_transformer
 
+import math, cv2, time
+
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -842,6 +844,43 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setDirty()
         self.loadShapes(shapes)
 
+    # REF [function] >> extract_rectified_text_rectangle_from_quadrilateral() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
+    @staticmethod
+    def extract_rotated_text_rectangle_from_quadrilateral(image, poly):
+        obb_center, obb_size, obb_angle = cv2.minAreaRect(poly)  # Tuple: (center, size, angle).
+        # TODO [check] >>
+        #if obb_size[0] < obb_size[1]:
+        if obb_angle < -10 or obb_angle > 10:
+            obb_size, obb_angle = obb_size[1::-1], obb_angle + 90
+
+        radius = math.sqrt(obb_size[0]**2 + obb_size[1]**2) / 2
+        dia = math.ceil(radius * 2)
+
+        patch_x1, patch_y1, patch_x2, patch_y2 = max(0, math.floor(obb_center[0] - radius) - 1), max(0, math.floor(obb_center[1] - radius) - 1), min(image.shape[1], math.ceil(obb_center[0] + radius) + 1), min(image.shape[0], math.ceil(obb_center[1] + radius) + 1)
+        #patch_x1, patch_y1, patch_x2, patch_y2 = max(0, math.floor(obb_center[0] - radius)), max(0, math.floor(obb_center[1] - radius)), min(image.shape[1], math.ceil(obb_center[0] + radius) + 1), min(image.shape[0], math.ceil(obb_center[1] + radius) + 1)
+        patch = image[patch_y1:patch_y2, patch_x1:patch_x2]
+
+        ctr = patch.shape[1] / 2, patch.shape[0] / 2
+        R = cv2.getRotationMatrix2D(ctr, angle=obb_angle, scale=1)
+        rotated = cv2.warpAffine(patch, R, (dia, dia), flags=cv2.INTER_LINEAR)
+
+        return rotated[math.floor(ctr[1] - obb_size[1] / 2):math.ceil(ctr[1] + obb_size[1] / 2), math.floor(ctr[0] - obb_size[0] / 2):math.ceil(ctr[0] + obb_size[0] / 2)]
+
+    # REF [function] >> extract_rectified_text_rectangle_from_quadrilateral() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
+    @staticmethod
+    def extract_rectified_text_rectangle_from_quadrilateral(image, poly):
+        obb_center, obb_size, obb_angle = cv2.minAreaRect(poly)  # Tuple: (center, size, angle).
+        obb_pts = cv2.boxPoints((obb_center, obb_size, obb_angle))  # 4 x 2. np.float32.
+
+        if obb_size[0] >= obb_size[1]:
+            target_pts = np.float32([[0, obb_size[1]], [0, 0], [obb_size[0], 0], [obb_size[0], obb_size[1]]])
+            canvas_size = round(obb_size[0]), round(obb_size[1])
+        else:
+            target_pts = np.float32([[obb_size[1], obb_size[0]], [0, obb_size[0]], [0, 0], [obb_size[1], 0]])
+            canvas_size = round(obb_size[1]), round(obb_size[0])
+        T = cv2.getPerspectiveTransform(obb_pts, target_pts, solveMethod=cv2.DECOMP_LU)  # Four points.
+        return cv2.warpPerspective(image, T, canvas_size, flags=cv2.INTER_LINEAR)
+
     def recognizeText(self):
         if self.canvas.selectedShapes:
             shapes = self.canvas.selectedShapes
@@ -852,19 +891,34 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, 'Warning', msg, QtWidgets.QMessageBox.Ok)
             return
 
-        rects = list()
+        print('Start loading image patches...')
+        start_time = time.time()
+        image = cv2.imread(self.imagePath, cv2.IMREAD_COLOR)
+        if image is None:
+            print('File not found, {}.'.format(self.imagePath))
+            return
+
+        image_height, image_width = image.shape[:2]
+        patches = list()
+        black_image = np.zeros_like(image)
+        mask_value = (255,) * image.ndim
         for shape in shapes:
-            points = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
-            rects.append(np.concatenate([np.min(points, axis=0), np.max(points, axis=0)]))  # [left, top, right, bottom].
-        rects = np.array(rects)
+            poly = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
+            patch = self.extract_rotated_text_rectangle_from_quadrilateral(image, poly)
+            #patch = self.extract_rectified_text_rectangle_from_quadrilateral(image, poly)
+            patches.append(patch)
+        print('End loading image patches: {} secs.'.format(time.time() - start_time))
  
-        recognized_texts = recognize_text_by_transformer(self.imagePath, rects)
+        recognized_texts = recognize_text_by_transformer(patches)
         if recognized_texts:
             if len(shapes) == len(recognized_texts):
                 for shape, txt in zip(shapes, recognized_texts):
                     shape.label = txt
                     item = self.labelList.get_item_from_shape(shape)
-                    item.setText(txt)
+                    if item is not None:
+                        item.setText(txt)
+                    else:
+                        self.status('Shape not found, {}'.format(item))
 
                 self.setDirty()
 

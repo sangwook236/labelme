@@ -5,11 +5,11 @@ import cv2, PIL.Image
 import labelme.dia_engine.dia_facade as dia_facade
 import labelme.dia_engine.text_generation_util as tg_util
 
-def recognize_text_by_transformer(image_filepath, rects):
-	image_shape = 64, 1280, 3
+def recognize_text_by_transformer(patches):
+	input_shape = 64, 1280, 3
 	max_label_len = 50
 	batch_size = 64
-	gpu = 0
+	gpu = -1
 
 	model_filepath_to_load = './labelme/dia_model/dia_20201002.pth'
 	is_pil = True
@@ -30,22 +30,13 @@ def recognize_text_by_transformer(image_filepath, rects):
 	print('<PAD> = {}, <SOS> = {}, <EOS> = {}, <UNK> = {}.'.format(label_converter.pad_id, SOS_ID, EOS_ID, label_converter.encode([label_converter.UNKNOWN], is_bare_output=True)[0]))
 
 	#--------------------
-	print('Start loading image patches...')
-	start_time = time.time()
-	image = cv2.imread(image_filepath, cv2.IMREAD_COLOR)
-	if image is None:
-		print('File not found, {}.'.format(image_filepath))
-		return None
-	patches = list()
-	for rct in rects:
-		patch = image[math.floor(rct[1]):math.ceil(rct[3])+1, math.floor(rct[0]):math.ceil(rct[2])+1]
-		patches.append(PIL.Image.fromarray(patch) if is_pil else patch)
-	inputs = dia_facade.images_to_tensor(patches, image_shape, is_pil, logger)
-	print('End loading image patches: {} secs.'.format(time.time() - start_time))
+	if is_pil:
+		patches = list(PIL.Image.fromarray(patch) for patch in patches)
+	inputs = dia_facade.images_to_tensor(patches, input_shape, is_pil, logger)
 
 	#--------------------
 	# Build a model.
-	model = dia_facade.build_text_model_for_inference(model_filepath_to_load, image_shape, max_label_len, label_converter, SOS_ID, EOS_ID, num_suffixes, logger=logger, device=device)
+	model = dia_facade.build_text_model_for_inference(model_filepath_to_load, input_shape, max_label_len, label_converter, SOS_ID, EOS_ID, num_suffixes, logger=logger, device=device)
 
 	if model and label_converter:
 		#batch_size = 1  # Infer one-by-one.
