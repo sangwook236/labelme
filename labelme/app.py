@@ -844,9 +844,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setDirty()
         self.loadShapes(shapes)
 
-    # REF [function] >> extract_rectified_text_rectangle_from_quadrilateral() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
+    # REF [function] >> extract_rotated_text_rectangle_from_polygon() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
     @staticmethod
-    def extract_rotated_text_rectangle_from_quadrilateral(image, poly):
+    def extract_rotated_text_rectangle_from_polygon(image, poly):
         obb_center, obb_size, obb_angle = cv2.minAreaRect(poly)  # Tuple: (center, size, angle).
         # TODO [check] >>
         #if obb_size[0] < obb_size[1]:
@@ -866,9 +866,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return rotated[math.floor(ctr[1] - obb_size[1] / 2):math.ceil(ctr[1] + obb_size[1] / 2), math.floor(ctr[0] - obb_size[0] / 2):math.ceil(ctr[0] + obb_size[0] / 2)]
 
-    # REF [function] >> extract_rectified_text_rectangle_from_quadrilateral() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
+    # REF [function] >> extract_rectified_text_rectangle_from_polygon() in ${SWL_PYTHON_HOME}/test/language_processing/run_text_recognition.py
     @staticmethod
-    def extract_rectified_text_rectangle_from_quadrilateral(image, poly):
+    def extract_rectified_text_rectangle_from_polygon(image, poly):
         obb_center, obb_size, obb_angle = cv2.minAreaRect(poly)  # Tuple: (center, size, angle).
         obb_pts = cv2.boxPoints((obb_center, obb_size, obb_angle))  # 4 x 2. np.float32.
 
@@ -904,8 +904,8 @@ class MainWindow(QtWidgets.QMainWindow):
         mask_value = (255,) * image.ndim
         for shape in shapes:
             poly = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
-            patch = self.extract_rotated_text_rectangle_from_quadrilateral(image, poly)
-            #patch = self.extract_rectified_text_rectangle_from_quadrilateral(image, poly)
+            #patch = self.extract_rotated_text_rectangle_from_polygon(image, poly)
+            patch = self.extract_rectified_text_rectangle_from_polygon(image, poly)
             patches.append(patch)
         print('End loading image patches: {} secs.'.format(time.time() - start_time))
  
