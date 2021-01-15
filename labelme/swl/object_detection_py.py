@@ -70,6 +70,6 @@ def detect_objects_by_mask_rcnn(image_filepath):
 	return objects
 
 if '__main__' == __name__:
-	image_filepath = './labelme/2011_000006.jpg' 
+	image_filepath = './labelme/swl/2011_000006.jpg' 
 	objects = detect_objects_by_faster_rcnn(image_filepath)
 	#objects = detect_objects_by_mask_rcnn(image_filepath)

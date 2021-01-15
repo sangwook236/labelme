@@ -8,9 +8,9 @@ import craft.test_utils as test_utils
 def detect_text_by_craft(image_filepath):
 	cache_dir_path = os.path.expanduser(os.path.join('~', '.labelme'))
 	#craft_trained_model_filepath = os.path.join(cache_dir_path, 'craft_mlt_25k.pth')
-	craft_trained_model_filepath = './labelme/craft/craft_mlt_25k.pth'
+	craft_trained_model_filepath = './labelme/swl/craft/craft_mlt_25k.pth'
 	#craft_trained_model_filepath = os.path.join(cache_dir_path, 'craft_refiner_CTW1500.pth')
-	craft_refiner_model_filepath = './labelme/craft/craft_refiner_CTW1500.pth'  # Pretrained refiner model.
+	craft_refiner_model_filepath = './labelme/swl/craft/craft_refiner_CTW1500.pth'  # Pretrained refiner model.
 	if not os.path.exists(craft_trained_model_filepath):
 		url = 'https://www.mediafire.com/file/qh2ullnnywi320s/craft_mlt_25k.pth/file'
 		os.makedirs(cache_dir_path, exist_ok=True)

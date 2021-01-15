@@ -9,8 +9,16 @@
 <div align="center">
   <a href="https://pypi.python.org/pypi/labelme"><img src="https://img.shields.io/pypi/v/labelme.svg"></a>
   <a href="https://pypi.org/project/labelme"><img src="https://img.shields.io/pypi/pyversions/labelme.svg"></a>
-  <a href="https://github.com/wkentaro/labelme/actions"><img src="https://github.com/wkentaro/labelme/workflows/CI/badge.svg"></a>
+  <a href="https://github.com/wkentaro/labelme/actions"><img src="https://github.com/wkentaro/labelme/workflows/ci/badge.svg?branch=master&event=push"></a>
   <a href="https://hub.docker.com/r/wkentaro/labelme"><img src="https://img.shields.io/docker/build/wkentaro/labelme.svg"></a>
+</div>
+
+<div align="center">
+  <a href="#installation"><b>Installation</b></a> |
+  <a href="#usage"><b>Usage</b></a> |
+  <a href="https://github.com/wkentaro/labelme/tree/master/examples/tutorial#tutorial-single-image-example"><b>Tutorial</b></a> |
+  <a href="https://github.com/wkentaro/labelme/tree/master/examples"><b>Examples</b></a> |
+  <a href="https://www.youtube.com/playlist?list=PLI6LvFw0iflh3o33YYnVIfOpaO0hc5Dzw"><b>Youtube FAQ</b></a>
 </div>
 
 <br/>
@@ -27,7 +35,7 @@ It is written in Python and uses Qt for its graphical interface.
 <img src="examples/instance_segmentation/data_dataset_voc/JPEGImages/2011_000006.jpg" width="19%" /> <img src="examples/instance_segmentation/data_dataset_voc/SegmentationClassPNG/2011_000006.png" width="19%" /> <img src="examples/instance_segmentation/data_dataset_voc/SegmentationClassVisualization/2011_000006.jpg" width="19%" /> <img src="examples/instance_segmentation/data_dataset_voc/SegmentationObjectPNG/2011_000006.png" width="19%" /> <img src="examples/instance_segmentation/data_dataset_voc/SegmentationObjectVisualization/2011_000006.jpg" width="19%" />  
 <i>VOC dataset example of instance segmentation.</i>
 
-<img src="examples/semantic_segmentation/.readme/annotation.jpg" width="32%" /> <img src="examples/bbox_detection/.readme/annotation.jpg" width="30%" /> <img src="examples/classification/.readme/annotation_cat.jpg" width="35%" />  
+<img src="examples/semantic_segmentation/.readme/annotation.jpg" width="30%" /> <img src="examples/bbox_detection/.readme/annotation.jpg" width="30%" /> <img src="examples/classification/.readme/annotation_cat.jpg" width="35%" />  
 <i>Other examples (semantic segmentation, bbox detection, and classification).</i>
 
 <img src="https://user-images.githubusercontent.com/4310419/47907116-85667800-de82-11e8-83d0-b9f4eb33268f.gif" width="30%" /> <img src="https://user-images.githubusercontent.com/4310419/47922172-57972880-deae-11e8-84f8-e4324a7c856a.gif" width="30%" /> <img src="https://user-images.githubusercontent.com/14256482/46932075-92145f00-d080-11e8-8d09-2162070ae57c.png" width="32%" />  
@@ -58,6 +66,7 @@ There are options:
 
 - Platform agonistic installation: [Anaconda](#anaconda), [Docker](#docker)
 - Platform specific installation: [Ubuntu](#ubuntu), [macOS](#macos), [Windows](#windows)
+- Pre-build binaries from [the release section](https://github.com/wkentaro/labelme/releases)
 
 ### Anaconda
 
@@ -89,12 +98,13 @@ pip install labelme
 You need install [docker](https://www.docker.com), then run below:
 
 ```bash
-wget https://raw.githubusercontent.com/wkentaro/labelme/master/labelme/cli/on_docker.py -O labelme_on_docker
-chmod u+x labelme_on_docker
+# on macOS
+socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\" &
+docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=docker.for.mac.host.internal:0 -v $(pwd):/root/workdir wkentaro/labelme
 
-# Maybe you need http://sourabhbajaj.com/blog/2017/02/07/gui-applications-docker-mac/ on macOS
-./labelme_on_docker examples/tutorial/apc2016_obj3.jpg -O examples/tutorial/apc2016_obj3.json
-./labelme_on_docker examples/semantic_segmentation/data_annotated
+# on Linux
+xhost +
+docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 -v $(pwd):/root/workdir wkentaro/labelme
 ```
 
 ### Ubuntu
@@ -108,6 +118,9 @@ sudo pip install labelme
 # Python3
 sudo apt-get install python3-pyqt5  # PyQt5
 sudo pip3 install labelme
+
+# or install standalone executable from:
+# https://github.com/wkentaro/labelme/releases
 ```
 
 ### Ubuntu 19.10+ / Debian (sid)
@@ -123,20 +136,19 @@ sudo apt-get install labelme
 brew install pyqt  # maybe pyqt5
 pip install labelme  # both python2/3 should work
 
-# or install standalone executable / app
-# NOTE: this only installs the `labelme` command
-brew install wkentaro/labelme/labelme
-brew cask install wkentaro/labelme/labelme
+# or install standalone executable/app from:
+# https://github.com/wkentaro/labelme/releases
 ```
 
 ### Windows
 
-Firstly, follow instruction in [Anaconda](#anaconda).
+Install [Anaconda](https://www.continuum.io/downloads), then in an Anaconda Prompt run:
 
 ```bash
-# Pillow 5 causes dll load error on Windows.
-# https://github.com/wkentaro/labelme/pull/174
-conda install pillow=4.0.0
+# python3
+conda create --name=labelme python=3.6
+conda activate labelme
+pip install labelme
 ```
 
 
@@ -169,7 +181,7 @@ For more advanced usage, please refer to the examples:
 * [Instance Segmentation Example](examples/instance_segmentation)
 * [Video Annotation Example](examples/video_annotation)
 
-### Command Line Arguemnts
+### Command Line Arguments
 - `--output` specifies the location that annotations will be written to. If the location ends with .json, a single annotation will be written to this file. Only one image can be annotated if a location is specified with .json. If the location does not end with .json, the program will assume it is a directory. Annotations will be stored in this directory with a name that corresponds to the image that the annotation was made on.
 - The first time you run labelme, it will create a config file in `~/.labelmerc`. You can edit this file and the changes will be applied the next time that you launch labelme. If you would prefer to use a config file from another location, you can specify this file with the `--config` flag.
 - Without the `--nosortlabels` flag, the program will list labels in alphabetical order. When the program is run with this flag, it will display labels in the order that they are provided.
@@ -209,8 +221,6 @@ pip install -e .
 ## How to build standalone executable
 
 Below shows how to build the standalone executable on macOS, Linux and Windows.  
-Also, there are pre-built executables in
-[the release section](https://github.com/wkentaro/labelme/releases).
 
 ```bash
 # Setup conda
@@ -237,7 +247,7 @@ If you use this project in your research or wish to refer to the baseline result
 
 ```bash
 @misc{labelme2016,
-  author =       {Ketaro Wada},
+  author =       {Kentaro Wada},
   title =        {{labelme: Image Polygonal Annotation with Python}},
   howpublished = {\url{https://github.com/wkentaro/labelme}},
   year =         {2016}

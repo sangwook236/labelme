@@ -6,7 +6,7 @@ import labelme.dia_engine.dia_facade as dia_facade
 import labelme.dia_engine.text_generation_util as tg_util
 
 def recognize_text_by_transformer(patches):
-	model_filepath_to_load = './labelme/dia_model/dia_20201002.pth'
+	model_filepath_to_load = './labelme/swl/dia_model/dia_20201002.pth'
 	input_shape = 64, 1280, 3
 	max_label_len = 50
 
