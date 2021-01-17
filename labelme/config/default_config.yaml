@@ -98,3 +98,7 @@ shortcuts:
   add_point_to_edge: Ctrl+Shift+P
   edit_label: Ctrl+E
   toggle_keep_prev_mode: Ctrl+P
+  detect_object: Ctrl+Shift+O
+  detect_text: Ctrl+Shift+T
+  recognize_text: Ctrl+Shift+R
+  merge_polygons_to_rect: Ctrl+Shift+M

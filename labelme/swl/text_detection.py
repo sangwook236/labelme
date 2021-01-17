@@ -1,7 +1,7 @@
 import os, math, time
 import numpy as np
 import cv2 as cv
-import labelme.util
+import labelme.swl.util as swl_util
 
 # REF [file] >> ${SWDT_PYTHON_HOME}/rnd/test/language_processing/keras_ocr_test.py
 def detect_text_by_craft(image_filepath):
@@ -89,7 +89,7 @@ def detect_objects_by_east(image_filepath):
 	if not os.path.exists(model_filepath) or not os.path.isfile(model_filepath):
 		print('Start downloading model files...')
 		start_time = time.time()
-		labelme.util.download(model_url, output_dir_path)
+		swl_util.download(model_url, output_dir_path)
 		print('End downloading model files to {}: {} secs.'.format(model_filepath, time.time() - start_time))
 
 	confThreshold = 0.5  # Confidence threshold.

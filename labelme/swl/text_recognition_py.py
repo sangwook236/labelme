@@ -2,8 +2,8 @@ import os, math, time
 import numpy as np
 import torch, torchvision
 import cv2, PIL.Image
-import labelme.dia_engine.dia_facade as dia_facade
-import labelme.dia_engine.text_generation_util as tg_util
+import labelme.swl.dia_engine.dia_facade as dia_facade
+import labelme.swl.dia_engine.text_generation_util as tg_util
 
 def recognize_text_by_transformer(patches):
 	model_filepath_to_load = './labelme/swl/dia_model/dia_20201002.pth'

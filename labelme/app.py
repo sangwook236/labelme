@@ -428,6 +428,40 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
 
+        detectObject = action(
+            self.tr("Detect Objects"),
+            self.detectObject,
+            shortcuts["detect_object"],
+            "objects",
+            self.tr("Detect objects"),
+            enabled=True
+		)
+        detectText = action(
+            self.tr("Detect Texts"),
+            self.detectText,
+            shortcuts["detect_text"],
+            "objects",
+            self.tr("Detect texts"),
+            enabled=True
+		)
+        recognizeText = action(
+            self.tr("Recognize Texts"),
+            self.recognizeText,
+            shortcuts["recognize_text"],
+            "objects",
+            self.tr("Recognize texts"),
+            enabled=True
+		)
+
+        mergePolygonToRect = action(
+            self.tr("Merge Polygons"),
+            self.mergePolygonToRect,
+            shortcuts["merge_polygons_to_rect"],
+            "objects",
+            self.tr("Merge polygons to a rectangle"),
+            enabled=False
+		)
+
         hideAll = action(
             self.tr("&Hide\nPolygons"),
             functools.partial(self.togglePolygons, False),
@@ -577,6 +611,8 @@ class MainWindow(QtWidgets.QMainWindow):
             copy=copy,
             undoLastPoint=undoLastPoint,
             undo=undo,
+            detectObject=detectObject, detectText=detectText, recognizeText=recognizeText,
+            mergePolygonToRect=mergePolygonToRect,
             addPointToEdge=addPointToEdge,
             removePoint=removePoint,
             createMode=createMode,
@@ -953,7 +989,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         for key in keys:
                             default_flags[key] = False
             shape.flags = default_flags
-            #shape.flags.update(flags)
+            #if flags: shape.flags.update(flags)
             """
 
             shapes.append(shape)
@@ -980,7 +1016,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         for key in keys:
                             default_flags[key] = False
             shape.flags = default_flags
-            #shape.flags.update(flags)
+            #if flags: shape.flags.update(flags)
             """
 
             shapes.append(shape)
@@ -1046,7 +1082,15 @@ class MainWindow(QtWidgets.QMainWindow):
         black_image = np.zeros_like(image)
         mask_value = (255,) * image.ndim
         for shape in shapes:
-            poly = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
+            if shape.shape_type == "polygon":
+                poly = np.array(list((pt.x(), pt.y()) for pt in shape.points), dtype=np.float32)
+            elif shape.shape_type == "rectangle":
+                x1, y1, x2, y2 = shape.points[0].x(), shape.points[0].y(), shape.points[1].x(), shape.points[1].y()
+                poly = np.array([(x1, y1), (x1, y2), (x2, y2), (x2, y1)], dtype=np.float32)
+            else:
+                msg = 'Shape type is polygon or rectangle'
+                QtWidgets.QMessageBox.warning(self, 'Warning', msg, QtWidgets.QMessageBox.Ok)
+                return
             #patch = self.extract_rotated_text_rectangle_from_polygon(image, poly)
             patch = self.extract_rectified_text_rectangle_from_polygon(image, poly)
             patches.append(patch)
@@ -1057,7 +1101,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(shapes) == len(recognized_texts):
                 for shape, txt in zip(shapes, recognized_texts):
                     shape.label = txt
-                    item = self.labelList.get_item_from_shape(shape)
+                    item = self.labelList.findItemByShape(shape)
                     if item is not None:
                         item.setText(txt)
                     else:
@@ -1097,7 +1141,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     for key in keys:
                         default_flags[key] = False
         shape.flags = default_flags
-        #shape.flags.update(flags)
+        #if flags: shape.flags.update(flags)
         """
 
         self.setDirty()
@@ -1291,6 +1335,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.delete.setEnabled(n_selected)
         self.actions.copy.setEnabled(n_selected)
         self.actions.edit.setEnabled(n_selected == 1)
+        self.actions.mergePolygonToRect.setEnabled(n_selected)
+        #self.actions.recognizeText.setEnabled(n_selected)
 
     def addLabel(self, shape):
         if shape.group_id is None:
@@ -1377,7 +1423,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         for key in keys:
                             default_flags[key] = False
             shape.flags = default_flags
-            shape.flags.update(flags)
+            if flags: shape.flags.update(flags)
             shape.other_data = other_data
 
             s.append(shape)

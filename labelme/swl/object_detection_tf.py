@@ -2,7 +2,7 @@ import os, time
 import numpy as np
 import tensorflow as tf
 import cv2 as cv
-import labelme.util
+import labelme.swl.util as swl_util
 
 # REF [file] >> ${SWDT_PYTHON_HOME}/rnd/test/machine_learning/tensorflow/tensorflow_object_detection.py
 # REF [site] >> https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
@@ -19,7 +19,7 @@ def detect_objects_by_faster_rcnn(image_filepath):
 	if not os.path.exists(model_filepath) or not os.path.isfile(model_filepath):
 		print('Start downloading model files...')
 		start_time = time.time()
-		labelme.util.download(model_url, output_dir_path)
+		swl_util.download(model_url, output_dir_path)
 		print('End downloading model files to {}: {} secs.'.format(model_filepath, time.time() - start_time))
 
 	"""
@@ -119,7 +119,7 @@ def detect_objects_by_mask_rcnn(image_filepath):
 	if not os.path.exists(model_filepath) or not os.path.isfile(model_filepath):
 		print('Start downloading model files...')
 		start_time = time.time()
-		labelme.util.download(model_url, output_dir_path)
+		swl_util.download(model_url, output_dir_path)
 		print('End downloading model files to {}: {} secs.'.format(model_filepath, time.time() - start_time))
 
 	"""

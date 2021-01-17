@@ -1,8 +1,8 @@
 import os, urllib.request, time
 import torch
-import craft.imgproc as imgproc
-#import craft.file_utils as file_utils
-import craft.test_utils as test_utils
+import labelme.swl.craft.imgproc as imgproc
+#import labelme.swl.craft.file_utils as file_utils
+import labelme.swl.craft.test_utils as test_utils
 
 # REF [function] >> run_word_craft() in ${SWL_PYTHON_HOME}/test/language_processing/craft/test_utils.py
 def detect_text_by_craft(image_filepath):
