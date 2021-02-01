@@ -49,6 +49,11 @@ def recognize_text_by_transformer(patches):
 		print('End inferring: {} secs.'.format(time.time() - start_time))
 		print('Inference: shape = {}, dtype = {}, (min, max) = ({}, {}).'.format(predictions.shape, predictions.dtype, np.min(predictions), np.max(predictions)))
 
+		if True:
+			# Replace <UNK> tokens to ' ' tokens.
+			UNKNOWN_ID, SPACE_ID = label_converter.encode([label_converter.UNKNOWN, ' '], is_bare_output=True)
+			predictions[predictions == UNKNOWN_ID] = SPACE_ID
+
 		recognized_texts = list(label_converter.decode(pred) for pred in predictions)
 		return recognized_texts
 	else: return None
